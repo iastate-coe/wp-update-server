@@ -13,6 +13,10 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 	protected function initRequest( $query = null, $headers = null ) {
 		$request = parent::initRequest( $query, $headers );
 
+		if (isset($_SERVER['X_FORWARDED_FOR']) && ! empty($_SERVER['X_FORWARDED_FOR'])){
+			$request->clientIp = $_SERVER['X_FORWARDED_FOR'];
+		}
+
 		//Load the license, if any.
 		$authKey = null;
 		if ( $request->param( 'auth_key' ) ) {
