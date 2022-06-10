@@ -1,7 +1,7 @@
 <?php
 
 class Engr_UpdateServer extends Wpup_UpdateServer {
-	protected $authenticationKey;
+	private $authenticationKey;
 
 	public function __construct( $serverUrl = null, $serverDirectory = null, $authenticationKey = null ) {
 		parent::__construct( $serverUrl, $serverDirectory );
@@ -45,6 +45,10 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 		return $meta;
 	}
 
+	private function isAuthenticationKeyValid( $string ): bool {
+		return $this->authenticationKey === $string;
+	}
+
 	protected function checkAuthorization( $request ) {
 		parent::checkAuthorization( $request );
 
@@ -58,9 +62,5 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 			}
 			$this->exitWithError( $message, 403 );
 		}
-	}
-
-	private function isAuthenticationKeyValid( $string ): bool {
-		return $this->authenticationKey === $string;
 	}
 }
