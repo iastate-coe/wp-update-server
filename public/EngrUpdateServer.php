@@ -6,15 +6,15 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 	public function __construct( $serverUrl = null, $serverDirectory = null, $authenticationKey = null ) {
 		parent::__construct( $serverUrl, $serverDirectory );
 		$this->authenticationKey = $authenticationKey;
-		$this->logDirectory = WP_UPDATE_ROOT_PATH . '/logs';
-		$this->cache = new Wpup_FileCache(WP_UPDATE_ROOT_PATH . '/cache');
+		$this->logDirectory      = WP_UPDATE_ROOT_PATH . '/logs';
+		$this->cache             = new Wpup_FileCache( WP_UPDATE_ROOT_PATH . '/cache' );
 	}
 
 	protected function initRequest( $query = null, $headers = null ) {
 		$request = parent::initRequest( $query, $headers );
 
-		if (isset($_SERVER['X_FORWARDED_FOR']) && ! empty($_SERVER['X_FORWARDED_FOR'])){
-			$request->clientIp = $_SERVER['X_FORWARDED_FOR'];
+		if ( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) && ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+			$request->clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'];
 		}
 
 		//Load the license, if any.
@@ -26,6 +26,14 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 		$request->authKey = $authKey;
 
 		return $request;
+	}
+
+	public static function isSsl() {
+		if ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && 'https' === strtolower( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ) {
+			return true;
+		}
+
+		return parent::isSsl();
 	}
 
 	protected function filterMetadata( $meta, $request ) {
