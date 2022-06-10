@@ -6,6 +6,8 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 	public function __construct( $serverUrl = null, $serverDirectory = null, $authenticationKey = null ) {
 		parent::__construct( $serverUrl, $serverDirectory );
 		$this->authenticationKey = $authenticationKey;
+		$this->logDirectory = WP_UPDATE_ROOT_PATH . '/logs';
+		$this->cache = new Wpup_FileCache(WP_UPDATE_ROOT_PATH . '/cache');
 	}
 
 	protected function initRequest( $query = null, $headers = null ) {

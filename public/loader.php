@@ -30,6 +30,10 @@ if ( ! defined( 'WP_UPDATE_SECRET_STRING' ) ) {
 	define( 'WP_UPDATE_SECRET_STRING', '123openup' );
 }
 
+if ( ! defined( 'WP_UPDATE_PACKAGE_PATH' ) ) {
+	define( 'WP_UPDATE_PACKAGE_PATH', WP_UPDATE_ROOT_PATH );
+}
+
 if ( ! defined( 'GLOB_BRACE' ) ) {
 	define( 'GLOB_BRACE', 0 );
 }
