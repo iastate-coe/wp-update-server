@@ -34,6 +34,10 @@ if ( ! defined( 'WP_UPDATE_PACKAGE_PATH' ) ) {
 	define( 'WP_UPDATE_PACKAGE_PATH', WP_UPDATE_ROOT_PATH );
 }
 
+if ( ! defined( 'WP_UPDATE_HASH_ALGO' ) ) {
+	define( 'WP_UPDATE_HASH_ALGO', 'tiger128,3' );
+}
+
 if ( ! defined( 'GLOB_BRACE' ) ) {
 	define( 'GLOB_BRACE', 0 );
 }

@@ -10,6 +10,14 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 		$this->cache             = new Wpup_FileCache( WP_UPDATE_ROOT_PATH . '/cache' );
 	}
 
+	public static function isSsl() {
+		if ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && 'https' === strtolower( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ) {
+			return true;
+		}
+
+		return parent::isSsl();
+	}
+
 	protected function initRequest( $query = null, $headers = null ) {
 		$request = parent::initRequest( $query, $headers );
 
@@ -19,21 +27,13 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 
 		//Load the license, if any.
 		$authKey = null;
-		if ( $request->param( 'auth_key' ) ) {
-			$authKey = $request->param( 'auth_key' );
+		if ( ! empty( $request->headers->get( 'Authorization' ) ) ) {
+			$authKey = urldecode( str_replace( 'Basic ', '', $request->headers->get( 'Authorization' ) ) );
 		}
 
 		$request->authKey = $authKey;
 
 		return $request;
-	}
-
-	public static function isSsl() {
-		if ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && 'https' === strtolower( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ) {
-			return true;
-		}
-
-		return parent::isSsl();
 	}
 
 	protected function filterMetadata( $meta, $request ) {
@@ -49,7 +49,7 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 		//Only include the download URL if the license is valid.
 		if ( $this->isAuthenticationKeyValid( $authKey ) ) {
 			//Append the license key or to the download URL.
-			$args                 = array( 'auth_key' => $request->param( 'auth_key' ) );
+			$args                 = array( 'uid' => $this->generateUniqueQueryArg( $request ) );
 			$meta['download_url'] = self::addQueryArg( $args, $meta['download_url'] );
 		} else {
 			//No license = no download link.
@@ -59,17 +59,51 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 		return $meta;
 	}
 
+	/**
+	 * @param string $string
+	 */
 	private function isAuthenticationKeyValid( $string ): bool {
 		return $this->authenticationKey === $string;
 	}
+
+	/**
+	 * @param Wpup_Request $request
+	 */
+	private function isHashValid( $request ): bool {
+		$parts    = array(
+			'action'  => (string) $request->action,
+			'slug'    => (string) $request->slug,
+			'version' => (string) $request->wpVersion,
+			'url'     => (string) $request->wpSiteUrl,
+		);
+		$sentHash = base64_decode( urldecode( $request->param( 'uid' ) ) );
+		$hash     = hash( WP_UPDATE_HASH_ALGO, implode( ';', $parts ) );
+
+		return $hash === $sentHash;
+	}
+
+	/**
+	 * @param Wpup_Request $request
+	 */
+	private function generateUniqueQueryArg( $request ): string {
+		$parts = array(
+			'action'  => 'download',
+			'slug'    => (string) $request->slug,
+			'version' => (string) $request->wpVersion,
+			'url'     => (string) $request->wpSiteUrl,
+		);
+
+		return urlencode( base64_encode( hash( WP_UPDATE_HASH_ALGO, implode( ';', $parts ) ) ) );
+	}
+
 
 	protected function checkAuthorization( $request ) {
 		parent::checkAuthorization( $request );
 
 		//Prevent download if the user doesn't have a valid license.
-		$authKey = $request->authKey;
-		if ( $request->action === 'download' && ! $this->isAuthenticationKeyValid( $authKey ) ) {
-			if ( ! isset( $authKey ) ) {
+		$authHash = $request->param( 'uid' ) ;
+		if ( 'download' === $request->action && ! $this->isHashValid( $request ) ) {
+			if ( empty( $authHash ) ) {
 				$message = 'You must provide a license key to download this plugin.';
 			} else {
 				$message = 'Sorry, your license is not valid.';
