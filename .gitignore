@@ -1,3 +1,6 @@
 packages/*.zip
 cache/*.txt
 logs/*.log
+engr-wp-config.php
+vendor/
+package-assets/
