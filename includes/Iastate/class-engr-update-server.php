@@ -1,8 +1,16 @@
 <?php
 
 class Engr_UpdateServer extends Wpup_UpdateServer {
+	/**
+	 * @var string|null
+	 */
 	private $authenticationKey;
 
+	/**
+	 * @param string $serverUrl
+	 * @param string $serverDirectory
+	 * @param string $authenticationKey
+	 */
 	public function __construct( $serverUrl = null, $serverDirectory = null, $authenticationKey = null ) {
 		parent::__construct( $serverUrl, $serverDirectory );
 		$this->authenticationKey = $authenticationKey;
@@ -10,6 +18,9 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 		$this->cache             = new Wpup_FileCache( WP_UPDATE_ROOT_PATH . '/cache' );
 	}
 
+	/**
+	 * @return bool
+	 */
 	public static function isSsl() {
 		if ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && 'https' === strtolower( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ) {
 			return true;
@@ -18,10 +29,16 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 		return parent::isSsl();
 	}
 
+	/**
+	 * @param array $query
+	 * @param array $headers
+	 *
+	 * @return Wpup_Request
+	 */
 	protected function initRequest( $query = null, $headers = null ) {
 		$request = parent::initRequest( $query, $headers );
 
-		if ( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) && ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+		if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
 			$request->clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'];
 		}
 
@@ -36,6 +53,12 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 		return $request;
 	}
 
+	/**
+	 * @param array $meta
+	 * @param Wpup_Request $request
+	 *
+	 * @return array
+	 */
 	protected function filterMetadata( $meta, $request ) {
 		$meta = parent::filterMetadata( $meta, $request );
 
@@ -69,22 +92,6 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 	/**
 	 * @param Wpup_Request $request
 	 */
-	private function isHashValid( $request ): bool {
-		$parts    = array(
-			'action'  => (string) $request->action,
-			'slug'    => (string) $request->slug,
-			'version' => (string) $request->wpVersion,
-			'url'     => (string) $request->wpSiteUrl,
-		);
-		$sentHash = base64_decode( urldecode( $request->param( 'uid' ) ) );
-		$hash     = hash( WP_UPDATE_HASH_ALGO, implode( ';', $parts ) );
-
-		return $hash === $sentHash;
-	}
-
-	/**
-	 * @param Wpup_Request $request
-	 */
 	private function generateUniqueQueryArg( $request ): string {
 		$parts = array(
 			'action'  => 'download',
@@ -96,12 +103,17 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 		return urlencode( base64_encode( hash( WP_UPDATE_HASH_ALGO, implode( ';', $parts ) ) ) );
 	}
 
-
+	/**
+	 * @param Wpup_Request $request
+	 *
+	 * @return void
+	 * @uses exit() if criteria isn't met.
+	 */
 	protected function checkAuthorization( $request ) {
 		parent::checkAuthorization( $request );
 
 		//Prevent download if the user doesn't have a valid license.
-		$authHash = $request->param( 'uid' ) ;
+		$authHash = $request->param( 'uid' );
 		if ( 'download' === $request->action && ! $this->isHashValid( $request ) ) {
 			if ( empty( $authHash ) ) {
 				$message = 'You must provide a license key to download this plugin.';
@@ -110,5 +122,21 @@ class Engr_UpdateServer extends Wpup_UpdateServer {
 			}
 			$this->exitWithError( $message, 403 );
 		}
+	}
+
+	/**
+	 * @param Wpup_Request $request
+	 */
+	private function isHashValid( $request ): bool {
+		$parts    = array(
+			'action'  => (string) $request->action,
+			'slug'    => (string) $request->slug,
+			'version' => (string) $request->wpVersion,
+			'url'     => (string) $request->wpSiteUrl,
+		);
+		$sentHash = base64_decode( urldecode( $request->param( 'uid' ) ) );
+		$hash     = hash( WP_UPDATE_HASH_ALGO, implode( ';', $parts ) );
+
+		return $hash === $sentHash;
 	}
 }
