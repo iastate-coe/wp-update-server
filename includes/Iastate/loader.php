@@ -35,3 +35,4 @@ if ( ! defined( 'WP_UPDATE_HOME_URL' ) ) {
 if ( ! defined( 'GLOB_BRACE' ) ) {
 	define( 'GLOB_BRACE', 0 );
 }
+
