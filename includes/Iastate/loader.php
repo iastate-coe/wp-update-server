@@ -9,6 +9,14 @@ if ( file_exists( WP_UPDATE_ROOT_PATH . '/engr-wp-config.php' ) ) {
 	require_once WP_UPDATE_ROOT_PATH . '/engr-wp-config.php';
 }
 
+if (class_exists('Redis')){
+	require_once WP_UPDATE_ROOT_PATH . '/includes/Iastate/Cache/class-redis-cache.php';
+}
+
+if (class_exists('Memcache')){
+	require_once WP_UPDATE_ROOT_PATH . '/includes/Iastate/Cache/class-memcache-cache.php';
+}
+
 if ( ! class_exists( 'Engr_UpdateServer' ) ) {
 	require_once WP_UPDATE_ROOT_PATH . '/includes/Iastate/class-engr-update-server.php';
 }
