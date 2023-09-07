@@ -1,7 +1,7 @@
 <?php
 
 // don't call directly.
-if (!defined('WP_UPDATE_ROOT_PATH')){
+if ( ! defined( 'WP_UPDATE_ROOT_PATH' ) ) {
 	die();
 }
 
@@ -9,11 +9,8 @@ if ( file_exists( WP_UPDATE_ROOT_PATH . '/engr-wp-config.php' ) ) {
 	require_once WP_UPDATE_ROOT_PATH . '/engr-wp-config.php';
 }
 
-if (class_exists('Redis')){
+if ( defined( 'WP_UPDATE_CACHE' ) && WP_UPDATE_CACHE ) {
 	require_once WP_UPDATE_ROOT_PATH . '/includes/Iastate/Cache/class-redis-cache.php';
-}
-
-if (class_exists('Memcache')){
 	require_once WP_UPDATE_ROOT_PATH . '/includes/Iastate/Cache/class-memcache-cache.php';
 }
 
